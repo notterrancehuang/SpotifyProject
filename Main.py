@@ -2,7 +2,10 @@ import requests
 import json
 
 SPOTIFY_GET_TOP_TRACKS_URL = "https://api.spotify.com/v1/me/top/tracks"
-SPOTIFY_CREATE_PLAYLIST_URL = "https://api.spotify.com/v1/users/br7u4dvozt4civyc5wyxdl5x6/playlists"
+playlist_id = None
+user_id = None
+SPOTIFY_CREATE_PLAYLIST_URL = f"https://api.spotify.com/v1/users/{user_id}/playlists"
+SPOTIFY_ADD_TO_PLAYLIST_URL = f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks"
 ACCESS_TOKEN = "BQAS321r3F5_b51-qqP3-1SqMUdgKNNYrujNrrtHRk8KDGx92K-bJHv7HLSl6z3-epbjruZ_xZ0qB-6RNU8QRLu8hE0B7n9b9ltiOr3U2SNJkJo1jUd96XwDCbfEXEvH8vb7WR5LvGLlwIpBBvkkyaVP3JFXK1KtNGJ2JrW8jJXxOWA14FJUN0H3F7aoCQJAr1tqL4MugHxzUmyfv_fUlqyHtYMu4JCinFgpGw"
 cid = open("ClientID", 'r')
 c_secret = open("ClientSecret", 'r')
@@ -47,9 +50,7 @@ def get_top_plays(limit, time_range):
 def create_playlist(name, public):
     response = requests.post(
         SPOTIFY_CREATE_PLAYLIST_URL,
-        headers={
-            "Authorization": f"Bearer {ACCESS_TOKEN}"
-        },
+        headers={ "Authorization": f"Bearer {ACCESS_TOKEN}" },
         json={
             "name": name,
             "public": public
@@ -60,24 +61,41 @@ def create_playlist(name, public):
     return json_response
 
 
+def add_song_to_playlist(playlist_id, song_uri):
+    response = requests.post(
+        SPOTIFY_ADD_TO_PLAYLIST_URL,
+        headers={
+            "Authorization": f"Bearer {ACCESS_TOKEN}" 
+        },
+        params={
+            "uris": song_uri
+        }
+    )
+    json_response = response.json()
+
+    return json_response
+
+
 def main():
-    limit = int(input("How many items to return? "))
-    # 0 <= limit <= 50
-    if limit < 0 or limit > 50:
-        limit = 20
-    time_range = request_time_range()
+    # limit = int(input("How many items to return? "))
+    # # 0 <= limit <= 50
+    # if limit < 0 or limit > 50:
+    #     limit = 20
+    # time_range = request_time_range()
 
-    top_plays = get_top_plays(limit, time_range)
+    # top_plays = get_top_plays(limit, time_range)
 
-    output_file = open("json_output.json", "w")
-    output_file.write(json.dumps(top_plays))
-    output_file.close()
+    # output_file = open("json_output.json", "w")
+    # output_file.write(json.dumps(top_plays))
+    # output_file.close()
 
-    # playlist = create_playlist(
-    #     name="New test playlist",
-    #     public=True
-    # )
-    # print(f"Playlist: {playlist}")
+    playlist_name = input("What is the playlist called? ")
+    playlist = create_playlist(
+        name=playlist_name,
+        public=True
+    )
+    # TODO get playlist id from json output
+    playlist_id = "6Oo4nYYD7dMubBA8usfPsk"
 
 
 if __name__ == "__main__":
