@@ -68,7 +68,10 @@ def main():
     time_range = request_time_range()
 
     top_plays = get_top_plays(limit, time_range)
-    print(f"Top plays: {top_plays}")
+
+    output_file = open("json_output.json", "w")
+    output_file.write(json.dumps(top_plays))
+    output_file.close()
 
     # playlist = create_playlist(
     #     name="New test playlist",
