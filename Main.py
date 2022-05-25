@@ -3,12 +3,19 @@ import json
 
 SPOTIFY_GET_TOP_TRACKS_URL = "https://api.spotify.com/v1/me/top/tracks"
 playlist_id = None
-user_id = None
+user_id = "br7u4dvozt4civyc5wyxdl5x6"
 SPOTIFY_CREATE_PLAYLIST_URL = f"https://api.spotify.com/v1/users/{user_id}/playlists"
 SPOTIFY_ADD_TO_PLAYLIST_URL = f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks"
-ACCESS_TOKEN = "BQAS321r3F5_b51-qqP3-1SqMUdgKNNYrujNrrtHRk8KDGx92K-bJHv7HLSl6z3-epbjruZ_xZ0qB-6RNU8QRLu8hE0B7n9b9ltiOr3U2SNJkJo1jUd96XwDCbfEXEvH8vb7WR5LvGLlwIpBBvkkyaVP3JFXK1KtNGJ2JrW8jJXxOWA14FJUN0H3F7aoCQJAr1tqL4MugHxzUmyfv_fUlqyHtYMu4JCinFgpGw"
+auth_url = "https://accounts.spotify.com/api/token"
 cid = open("ClientID", 'r')
 c_secret = open("ClientSecret", 'r')
+data = {
+    "grant_type": "client_credentials",
+    "client_id": cid,
+    "client_secret": c_secret,
+}
+auth_response = requests.post(auth_url, data=data)
+ACCESS_TOKEN = auth_response.json().get("access_token")
 redirect_url = open("RedirectURL", 'r')
 scope = "user-top-read playlist-modify-public"
 
@@ -61,6 +68,11 @@ def create_playlist(name, public):
     return json_response
 
 
+def add_songs(playlist_id, songs):
+    for song in songs:
+        add_song_to_playlist(playlist_id, song)
+
+
 def add_song_to_playlist(playlist_id, song_uri):
     response = requests.post(
         SPOTIFY_ADD_TO_PLAYLIST_URL,
@@ -77,25 +89,35 @@ def add_song_to_playlist(playlist_id, song_uri):
 
 
 def main():
-    # limit = int(input("How many items to return? "))
-    # # 0 <= limit <= 50
-    # if limit < 0 or limit > 50:
-    #     limit = 20
-    # time_range = request_time_range()
+    limit = int(input("How many items to return? "))
+    # 0 <= limit <= 50
+    if limit < 0 or limit > 50:
+        limit = 20
+    time_range = request_time_range()
 
-    # top_plays = get_top_plays(limit, time_range)
+    top_plays = get_top_plays(limit, time_range)
 
-    # output_file = open("json_output.json", "w")
-    # output_file.write(json.dumps(top_plays))
-    # output_file.close()
+    output_file = open("top_songs_output.json", "w")
+    output_file.write(json.dumps(top_plays))
+    output_file.close()
+    songs = []
+    for i in range(limit):
+        songs.append(top_plays["items"][i]["uri"])
 
     playlist_name = input("What is the playlist called? ")
     playlist = create_playlist(
         name=playlist_name,
         public=True
     )
-    # TODO get playlist id from json output
-    playlist_id = "6Oo4nYYD7dMubBA8usfPsk"
+    playlist_info = open("playlist_info.json", "w")
+    playlist_info.write(json.dumps(playlist))
+    playlist_info.close()
+    playlist_id = playlist["uri"]
+    playlist_url_id = playlist["uri"].split(":")[2]
+    print(playlist_id)
+    SPOTIFY_ADD_TO_PLAYLIST_URL = f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks" 
+
+    add_songs(playlist_id, songs)
 
 
 if __name__ == "__main__":
