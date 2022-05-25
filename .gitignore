@@ -3,3 +3,4 @@ ClientID
 ClientSecret
 RedirectURL
 top_songs_output.json
+playlist_info.json
