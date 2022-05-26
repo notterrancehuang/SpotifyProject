@@ -1,24 +1,29 @@
 import requests
 import json
+import base64
 
+AUTH_URL = "https://accounts.spotify.com/api/token"
 SPOTIFY_GET_TOP_TRACKS_URL = "https://api.spotify.com/v1/me/top/tracks"
 playlist_id = None
 user_id = "br7u4dvozt4civyc5wyxdl5x6"
 SPOTIFY_CREATE_PLAYLIST_URL = f"https://api.spotify.com/v1/users/{user_id}/playlists"
 SPOTIFY_ADD_TO_PLAYLIST_URL = f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks"
 auth_url = "https://accounts.spotify.com/api/token"
-cid = open("ClientID", 'r')
-c_secret = open("ClientSecret", 'r')
-data = {
-    "grant_type": "client_credentials",
-    "client_id": cid,
-    "client_secret": c_secret,
-}
-auth_response = requests.post(auth_url, data=data)
-ACCESS_TOKEN = auth_response.json().get("access_token")
 redirect_url = open("RedirectURL", 'r')
+CLIENT_ID = open("ClientID", 'r')
+CLIENT_SECRET = open("ClientSecret", 'r')
 scope = "user-top-read playlist-modify-public"
 
+auth_response = requests.post(
+    AUTH_URL, 
+    {
+        "grant_type": "client_credentials",
+        "client_id": CLIENT_ID,
+        "client_secret": CLIENT_SECRET,
+    }
+)
+auth_response_data = auth_response.json()
+ACCESS_TOKEN = auth_response_data["access_token"]
 
 def request_time_range():
     # what is the time frame that the top tracks are computed
@@ -38,6 +43,7 @@ def request_time_range():
 
 
 def get_top_plays(limit, time_range):
+    # get tracks that the user plays the most
     response = requests.get(
         SPOTIFY_GET_TOP_TRACKS_URL,
         headers={
@@ -54,7 +60,9 @@ def get_top_plays(limit, time_range):
     return json_response
 
 
-def create_playlist(name, public):
+def create_playlist(public):
+    # create a new playlist
+    name = input("What is the playlist called? ")
     response = requests.post(
         SPOTIFY_CREATE_PLAYLIST_URL,
         headers={ "Authorization": f"Bearer {ACCESS_TOKEN}" },
@@ -69,11 +77,13 @@ def create_playlist(name, public):
 
 
 def add_songs(playlist_id, songs):
+    # takes in a list of song ids and adds them to playlist
     for song in songs:
         add_song_to_playlist(playlist_id, song)
 
 
 def add_song_to_playlist(playlist_id, song_uri):
+    # adds an individual song to playlist
     response = requests.post(
         SPOTIFY_ADD_TO_PLAYLIST_URL,
         headers={
@@ -97,27 +107,28 @@ def main():
 
     top_plays = get_top_plays(limit, time_range)
 
+    # create json file with top songs info
     output_file = open("top_songs_output.json", "w")
     output_file.write(json.dumps(top_plays))
     output_file.close()
-    songs = []
+    songs_uri = []
     for i in range(limit):
-        songs.append(top_plays["items"][i]["uri"])
+        songs_uri.append(top_plays["items"][i]["uri"])
 
-    playlist_name = input("What is the playlist called? ")
     playlist = create_playlist(
-        name=playlist_name,
         public=True
     )
+    # create json file with playlist info
     playlist_info = open("playlist_info.json", "w")
     playlist_info.write(json.dumps(playlist))
     playlist_info.close()
+
     playlist_id = playlist["uri"]
     playlist_url_id = playlist["uri"].split(":")[2]
     print(playlist_id)
-    SPOTIFY_ADD_TO_PLAYLIST_URL = f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks" 
+    SPOTIFY_ADD_TO_PLAYLIST_URL = f"https://api.spotify.com/v1/playlists/{playlist_url_id}/tracks" 
 
-    add_songs(playlist_id, songs)
+    add_songs(playlist_id, songs_uri)
 
 
 if __name__ == "__main__":
