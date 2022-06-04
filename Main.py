@@ -10,20 +10,27 @@ SPOTIFY_CREATE_PLAYLIST_URL = f"https://api.spotify.com/v1/users/{user_id}/playl
 SPOTIFY_ADD_TO_PLAYLIST_URL = f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks"
 auth_url = "https://accounts.spotify.com/api/token"
 redirect_url = open("RedirectURL", 'r')
-CLIENT_ID = open("ClientID", 'r')
-CLIENT_SECRET = open("ClientSecret", 'r')
+CLIENT_ID = open("ClientID", 'r').read()
+CLIENT_SECRET = open("ClientSecret", 'r').read()
 scope = "user-top-read playlist-modify-public"
 
-auth_response = requests.post(
-    AUTH_URL, 
-    {
-        "grant_type": "client_credentials",
-        "client_id": CLIENT_ID,
-        "client_secret": CLIENT_SECRET,
+# get access token
+# TODO something is wrong with getting access token
+message = CLIENT_ID + ":" + CLIENT_SECRET
+message_bytes = message.encode('ascii')
+base64_bytes = base64.b64encode(message_bytes)
+base64_message = base64_bytes.decode('ascii')
+
+auth_options = requests.post(
+    "https://accounts.spotify.com/api/token",
+    headers={
+        "Authorization": "Basic " + base64_message
+    },
+    data={
+        "grant_type": "client_credentials"
     }
 )
-auth_response_data = auth_response.json()
-ACCESS_TOKEN = auth_response_data["access_token"]
+ACCESS_TOKEN = auth_options.json()["access_token"]
 
 def request_time_range():
     # what is the time frame that the top tracks are computed
