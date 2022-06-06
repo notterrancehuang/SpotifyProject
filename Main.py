@@ -1,4 +1,3 @@
-from tkinter.tix import Form
 import requests
 import json
 import base64
@@ -18,17 +17,7 @@ CLIENT_SECRET = open("ClientSecret", 'r').read()
 scope = "user-top-read playlist-modify-public"
 
 # get access token
-# TODO something is wrong with getting access token
-# auth_code = requests.get(AUTH_URL, {
-#     "client_id": CLIENT_ID,
-#     "response_type": "code",
-#     "redirect_uri": redirect_url,
-#     "scope": scope,
-# })
-
 ccs = CLIENT_ID + ':' + CLIENT_SECRET
-
-print(ccs)
 
 auth_header = base64.b64encode(ccs.encode("ascii"))
 
@@ -38,16 +27,16 @@ headers = {
 }
 
 payload = {
-     'grant_type': 'client_credentials',
+    'grant_type': 'client_credentials',
 }
 
-access_token_request = requests.post(url=TOKEN_URL, data=payload, headers=headers)
+access_token_request = requests.post(
+    url=TOKEN_URL, data=payload, headers=headers)
 access_token_response_data = access_token_request.json()
 print(access_token_response_data)
 ACCESS_TOKEN = access_token_response_data["access_token"]
 print("Access Token: " + ACCESS_TOKEN)
 
-# ACCESS_TOKEN = "BQAk5Y-ZaHC-5NdcGKz0rnuN50bkNES2GoH9lz14QhiTA_BPLD2RNYLr8WQ4QopgSqLwNr3zGQeThNwTBCRA3oOqHoGdripDjSXbJfIrd2EiI35z04_jeLeAl3h38zYnNrl_c1G2uBXapSyggEnE5TiDEN08MyEZKf_aBYaU0HCMLa2bMaLiT6Xxa0l28uYQRB0soqDYb9-jJ1Pdibf1JiGFn_DaMPAeUbM7Qg"
 
 def request_time_range():
     # what is the time frame that the top tracks are computed
@@ -89,7 +78,7 @@ def create_playlist(public):
     name = input("What is the playlist called? ")
     response = requests.post(
         SPOTIFY_CREATE_PLAYLIST_URL,
-        headers={ "Authorization": f"Bearer {ACCESS_TOKEN}" },
+        headers={"Authorization": f"Bearer {ACCESS_TOKEN}"},
         json={
             "name": name,
             "public": public
@@ -111,7 +100,7 @@ def add_song_to_playlist(playlist_id, song_uri):
     response = requests.post(
         SPOTIFY_ADD_TO_PLAYLIST_URL,
         headers={
-            "Authorization": f"Bearer {ACCESS_TOKEN}" 
+            "Authorization": f"Bearer {ACCESS_TOKEN}"
         },
         params={
             "uris": song_uri
@@ -150,7 +139,7 @@ def main():
     playlist_id = playlist["uri"]
     playlist_url_id = playlist["uri"].split(":")[2]
     print(playlist_id)
-    SPOTIFY_ADD_TO_PLAYLIST_URL = f"https://api.spotify.com/v1/playlists/{playlist_url_id}/tracks" 
+    SPOTIFY_ADD_TO_PLAYLIST_URL = f"https://api.spotify.com/v1/playlists/{playlist_url_id}/tracks"
 
     add_songs(playlist_id, songs_uri)
 
