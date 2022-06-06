@@ -1,3 +1,4 @@
+from tkinter.tix import Form
 import requests
 import json
 import base64
@@ -18,28 +19,33 @@ scope = "user-top-read playlist-modify-public"
 
 # get access token
 # TODO something is wrong with getting access token
-auth_code = requests.get(AUTH_URL, {
-    "client_id": CLIENT_ID,
-    "response_type": "code",
-    "redirect_uri": redirect_url,
-    "scope": scope,
-})
+# auth_code = requests.get(AUTH_URL, {
+#     "client_id": CLIENT_ID,
+#     "response_type": "code",
+#     "redirect_uri": redirect_url,
+#     "scope": scope,
+# })
 
-auth_header = base64.urlsafe_b64encode((CLIENT_ID + ":" + CLIENT_SECRET).encode())
+ccs = CLIENT_ID + ':' + CLIENT_SECRET
+
+print(ccs)
+
+auth_header = base64.b64encode(ccs.encode("ascii"))
+
 headers = {
-    "Content-Type": "application/x-www-form-urlencoded",
+    'Authorization': "Basic " + auth_header.decode(),
+    "Content-Type": "application/x-www-form-urlencoded"
 }
 
 payload = {
-    "grant_type": "authorization_code",
-    "code": auth_code,
-    "redirect_uri": redirect_url,
+     'grant_type': 'client_credentials',
 }
 
-access_token_request = requests.post(url=TOKEN_URL, auth=(CLIENT_ID, CLIENT_SECRET), data=payload, headers=headers)
+access_token_request = requests.post(url=TOKEN_URL, data=payload, headers=headers)
 access_token_response_data = access_token_request.json()
 print(access_token_response_data)
 ACCESS_TOKEN = access_token_response_data["access_token"]
+print("Access Token: " + ACCESS_TOKEN)
 
 # ACCESS_TOKEN = "BQAk5Y-ZaHC-5NdcGKz0rnuN50bkNES2GoH9lz14QhiTA_BPLD2RNYLr8WQ4QopgSqLwNr3zGQeThNwTBCRA3oOqHoGdripDjSXbJfIrd2EiI35z04_jeLeAl3h38zYnNrl_c1G2uBXapSyggEnE5TiDEN08MyEZKf_aBYaU0HCMLa2bMaLiT6Xxa0l28uYQRB0soqDYb9-jJ1Pdibf1JiGFn_DaMPAeUbM7Qg"
 
