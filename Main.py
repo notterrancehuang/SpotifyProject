@@ -2,35 +2,46 @@ import requests
 import json
 import base64
 
-AUTH_URL = "https://accounts.spotify.com/api/token"
+AUTH_URL = "https://accounts.spotify.com/authorize"
+TOKEN_URL = "https://accounts.spotify.com/api/token"
+BASE_URL = "htpps://api.spotify.com/v1/"
 SPOTIFY_GET_TOP_TRACKS_URL = "https://api.spotify.com/v1/me/top/tracks"
 playlist_id = None
 user_id = "br7u4dvozt4civyc5wyxdl5x6"
 SPOTIFY_CREATE_PLAYLIST_URL = f"https://api.spotify.com/v1/users/{user_id}/playlists"
 SPOTIFY_ADD_TO_PLAYLIST_URL = f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks"
 auth_url = "https://accounts.spotify.com/api/token"
-redirect_url = open("RedirectURL", 'r')
+redirect_url = open("RedirectURL", 'r').read()
 CLIENT_ID = open("ClientID", 'r').read()
 CLIENT_SECRET = open("ClientSecret", 'r').read()
 scope = "user-top-read playlist-modify-public"
 
 # get access token
 # TODO something is wrong with getting access token
-message = CLIENT_ID + ":" + CLIENT_SECRET
-message_bytes = message.encode('ascii')
-base64_bytes = base64.b64encode(message_bytes)
-base64_message = base64_bytes.decode('ascii')
+auth_code = requests.get(AUTH_URL, {
+    "client_id": CLIENT_ID,
+    "response_type": "code",
+    "redirect_uri": redirect_url,
+    "scope": scope,
+})
 
-auth_options = requests.post(
-    "https://accounts.spotify.com/api/token",
-    headers={
-        "Authorization": "Basic " + base64_message
-    },
-    data={
-        "grant_type": "client_credentials"
-    }
-)
-ACCESS_TOKEN = auth_options.json()["access_token"]
+auth_header = base64.urlsafe_b64encode((CLIENT_ID + ":" + CLIENT_SECRET).encode())
+headers = {
+    "Content-Type": "application/x-www-form-urlencoded",
+}
+
+payload = {
+    "grant_type": "authorization_code",
+    "code": auth_code,
+    "redirect_uri": redirect_url,
+}
+
+access_token_request = requests.post(url=TOKEN_URL, auth=(CLIENT_ID, CLIENT_SECRET), data=payload, headers=headers)
+access_token_response_data = access_token_request.json()
+print(access_token_response_data)
+ACCESS_TOKEN = access_token_response_data["access_token"]
+
+# ACCESS_TOKEN = "BQAk5Y-ZaHC-5NdcGKz0rnuN50bkNES2GoH9lz14QhiTA_BPLD2RNYLr8WQ4QopgSqLwNr3zGQeThNwTBCRA3oOqHoGdripDjSXbJfIrd2EiI35z04_jeLeAl3h38zYnNrl_c1G2uBXapSyggEnE5TiDEN08MyEZKf_aBYaU0HCMLa2bMaLiT6Xxa0l28uYQRB0soqDYb9-jJ1Pdibf1JiGFn_DaMPAeUbM7Qg"
 
 def request_time_range():
     # what is the time frame that the top tracks are computed
