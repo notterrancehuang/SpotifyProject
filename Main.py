@@ -1,3 +1,5 @@
+import hashlib
+import re
 import requests
 import json
 import base64
@@ -16,29 +18,51 @@ CLIENT_ID = open("ClientID", 'r').read()
 CLIENT_SECRET = open("ClientSecret", 'r').read()
 scope = "user-top-read playlist-modify-public"
 
-# get access token
-ccs = CLIENT_ID + ':' + CLIENT_SECRET
 
-auth_header = base64.b64encode(ccs.encode("ascii"))
+def get_access_token():
+    ccs = CLIENT_ID + ':' + CLIENT_SECRET
 
-headers = {
-    'Authorization': "Basic " + auth_header.decode(),
-    "Content-Type": "application/x-www-form-urlencoded"
-}
+    auth_header = base64.b64encode(ccs.encode("ascii"))
 
-payload = {
-    'grant_type': 'client_credentials',
-}
+    headers = {
+        'Authorization': "Basic " + auth_header.decode(),
+        "Content-Type": "application/x-www-form-urlencoded"
+    }
 
-access_token_request = requests.post(
-    url=TOKEN_URL, data=payload, headers=headers)
-access_token_response_data = access_token_request.json()
-print(access_token_response_data)
-ACCESS_TOKEN = access_token_response_data["access_token"]
-print("Access Token: " + ACCESS_TOKEN)
+    payload = {
+        'grant_type': 'client_credentials',
+    }
+
+    access_token_request = requests.post(
+        url=TOKEN_URL, data=payload, headers=headers)
+    access_token_response_data = access_token_request.json()
+    print(access_token_response_data)
+    ACCESS_TOKEN = access_token_response_data["access_token"]
+    print("Access Token: " + ACCESS_TOKEN)
+
+
+def authorize_user():
+    auth_query_parameters = {
+        "response_type": "code",
+        "client_id": CLIENT_ID,
+        "scope": scope,
+        "redirect_uri": redirect_url,
+        "code_challenge_method": "S256",
+    }
+    code_verifier = base64.urlsafe_b64encode(os.urandom(40)).decode('utf-8')
+    code_verifier = re.sub('[^a-zA-Z0-9]+', '', code_verifier)
+
+    code_challenge = hashlib.sha256(code_verifier.encode('utf-8')).digest()
+    code_challenge = base64.urlsafe_b64encode(code_challenge).decode('utf-8')
+    code_challenge = code_challenge.replace("=", '')
+
+    response = requests.get("https://accounts.spotify.com/authorize/?")
 
 
 def request_time_range():
+    """
+    Returns the time range string for get requests params to use
+    """
     # what is the time frame that the top tracks are computed
     time_range_input = input("What is the time range?\n"
                              "\tShort-term is 4 weeks\n"
@@ -56,6 +80,12 @@ def request_time_range():
 
 
 def get_top_plays(limit, time_range):
+    """
+    limit: number of songs to return
+    time_range: the time range of top songs
+
+    return json object
+    """
     # get tracks that the user plays the most
     response = requests.get(
         SPOTIFY_GET_TOP_TRACKS_URL,
@@ -74,6 +104,11 @@ def get_top_plays(limit, time_range):
 
 
 def create_playlist(public):
+    """
+    public: a boolean for if the new playlist is public
+
+    returns json object
+    """
     # create a new playlist
     name = input("What is the playlist called? ")
     response = requests.post(
@@ -90,12 +125,22 @@ def create_playlist(public):
 
 
 def add_songs(playlist_id, songs):
+    """
+    playlist_id: the id of the playlist 
+    songs: list of song uris
+    """
     # takes in a list of song ids and adds them to playlist
     for song in songs:
         add_song_to_playlist(playlist_id, song)
 
 
 def add_song_to_playlist(playlist_id, song_uri):
+    """
+    playlist_id: the id of the playlist
+    song_uri: the song id
+
+    returns json object
+    """
     # adds an individual song to playlist
     response = requests.post(
         SPOTIFY_ADD_TO_PLAYLIST_URL,
@@ -112,6 +157,7 @@ def add_song_to_playlist(playlist_id, song_uri):
 
 
 def main():
+    get_access_token()
     limit = int(input("How many items to return? "))
     # 0 <= limit <= 50
     if limit < 0 or limit > 50:
