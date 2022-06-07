@@ -1,4 +1,5 @@
 import hashlib
+import os
 import re
 import requests
 import json
@@ -7,6 +8,7 @@ import base64
 AUTH_URL = "https://accounts.spotify.com/authorize"
 TOKEN_URL = "https://accounts.spotify.com/api/token"
 BASE_URL = "htpps://api.spotify.com/v1/"
+ACCESS_TOKEN = None
 SPOTIFY_GET_TOP_TRACKS_URL = "https://api.spotify.com/v1/me/top/tracks"
 playlist_id = None
 user_id = "br7u4dvozt4civyc5wyxdl5x6"
@@ -42,13 +44,6 @@ def get_access_token():
 
 
 def authorize_user():
-    auth_query_parameters = {
-        "response_type": "code",
-        "client_id": CLIENT_ID,
-        "scope": scope,
-        "redirect_uri": redirect_url,
-        "code_challenge_method": "S256",
-    }
     code_verifier = base64.urlsafe_b64encode(os.urandom(40)).decode('utf-8')
     code_verifier = re.sub('[^a-zA-Z0-9]+', '', code_verifier)
 
@@ -56,7 +51,16 @@ def authorize_user():
     code_challenge = base64.urlsafe_b64encode(code_challenge).decode('utf-8')
     code_challenge = code_challenge.replace("=", '')
 
-    response = requests.get("https://accounts.spotify.com/authorize/?")
+    payload = {
+        "response_type": "code",
+        "client_id": CLIENT_ID,
+        "scope": scope,
+        "redirect_uri": redirect_url,
+        "code_challenge_method": "S256",
+        "code_challenge": code_challenge,
+    }
+
+    response = requests.get("https://accounts.spotify.com/authorize/?", params=payload)
 
 
 def request_time_range():
@@ -158,6 +162,7 @@ def add_song_to_playlist(playlist_id, song_uri):
 
 def main():
     get_access_token()
+    authorize_user()
     limit = int(input("How many items to return? "))
     # 0 <= limit <= 50
     if limit < 0 or limit > 50:
