@@ -37,11 +37,11 @@ def get_top_plays(limit, time_range):
     return json object
     """
     # get tracks that the user plays the most
-    print("Access token: " + access_token.ACCESS_TOKEN)
+    print("Access token: " + ACCESS_TOKEN)
     response = requests.get(
         info.SPOTIFY_GET_TOP_TRACKS_URL,
         headers={
-            "Authorization": f"Bearer {access_token.ACCESS_TOKEN}"
+            "Authorization": f"Bearer {ACCESS_TOKEN}"
         },
         params={
             "limit": limit,
@@ -63,8 +63,8 @@ def create_playlist(public):
     # create a new playlist
     name = input("What is the playlist called? ")
     response = requests.post(
-        info.SPOTIFY_CREATE_PLAYLIST_URL,
-        headers={"Authorization": f"Bearer {access_token.ACCESS_TOKEN}"},
+        info.get_spotify_create_playlist_url(info.user_id),
+        headers={"Authorization": f"Bearer {ACCESS_TOKEN}"},
         json={
             "name": name,
             "public": public
@@ -93,10 +93,11 @@ def add_song_to_playlist(playlist_id, song_uri):
     returns json object
     """
     # adds an individual song to playlist
+    add_to_playlist_url = info.get_spotify_add_to_playlist_url(playlist_id)
     response = requests.post(
-        info.SPOTIFY_ADD_TO_PLAYLIST_URL,
+        add_to_playlist_url,
         headers={
-            "Authorization": f"Bearer {access_token.ACCESS_TOKEN}"
+            "Authorization": f"Bearer {ACCESS_TOKEN}"
         },
         params={
             "uris": song_uri
@@ -108,7 +109,12 @@ def add_song_to_playlist(playlist_id, song_uri):
 
 
 def main():
-    ACCESS_TOKEN = access_token.get_access_token()
+    # ACCESS_TOKEN = access_token.get_access_token()
+    at = access_token.AccessToken()
+    global ACCESS_TOKEN
+    ACCESS_TOKEN = at.get_access_token()
+    ACCESS_TOKEN = "BQBWaTAHlqLOpvr4qcp3jAA8AujK2V_r685hmPAOt1-e6CwmU5Kil9bLZXRuHxoxv_IqGHQHOyDgtZS8Xcl6c36lE6zDsXvFu6PqjRn2MLhqDxFmNvS9Sq9WMboqCdLBcASBprjQNGzJEQwNtTam3SvGX8tgCAI7IvvSaW6XsvaglSilC6AJfkMF2IW58fkv2hcSsVTRa0sYKGC_oi-2gYDIuRUsTkU7JxuwBA"
+    print(ACCESS_TOKEN)
     authorize.authorize_user()
     limit = int(input("How many items to return? "))
     # 0 <= limit <= 50
@@ -135,9 +141,7 @@ def main():
     playlist_info.close()
 
     playlist_id = playlist["uri"]
-    playlist_url_id = playlist["uri"].split(":")[2]
     print(playlist_id)
-    SPOTIFY_ADD_TO_PLAYLIST_URL = f"https://api.spotify.com/v1/playlists/{playlist_url_id}/tracks"
 
     add_songs(playlist_id, songs_uri)
 
