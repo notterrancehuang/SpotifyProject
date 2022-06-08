@@ -4,63 +4,9 @@ import re
 import requests
 import json
 import base64
-
-AUTH_URL = "https://accounts.spotify.com/authorize"
-TOKEN_URL = "https://accounts.spotify.com/api/token"
-BASE_URL = "htpps://api.spotify.com/v1/"
-ACCESS_TOKEN = None
-SPOTIFY_GET_TOP_TRACKS_URL = "https://api.spotify.com/v1/me/top/tracks"
-playlist_id = None
-user_id = "br7u4dvozt4civyc5wyxdl5x6"
-SPOTIFY_CREATE_PLAYLIST_URL = f"https://api.spotify.com/v1/users/{user_id}/playlists"
-SPOTIFY_ADD_TO_PLAYLIST_URL = f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks"
-auth_url = "https://accounts.spotify.com/api/token"
-redirect_url = open("RedirectURL", 'r').read()
-CLIENT_ID = open("ClientID", 'r').read()
-CLIENT_SECRET = open("ClientSecret", 'r').read()
-scope = "user-top-read playlist-modify-public"
-
-
-def get_access_token():
-    ccs = CLIENT_ID + ':' + CLIENT_SECRET
-
-    auth_header = base64.b64encode(ccs.encode("ascii"))
-
-    headers = {
-        'Authorization': "Basic " + auth_header.decode(),
-        "Content-Type": "application/x-www-form-urlencoded"
-    }
-
-    payload = {
-        'grant_type': 'client_credentials',
-    }
-
-    access_token_request = requests.post(
-        url=TOKEN_URL, data=payload, headers=headers)
-    access_token_response_data = access_token_request.json()
-    print(access_token_response_data)
-    ACCESS_TOKEN = access_token_response_data["access_token"]
-    print("Access Token: " + ACCESS_TOKEN)
-
-
-def authorize_user():
-    code_verifier = base64.urlsafe_b64encode(os.urandom(40)).decode('utf-8')
-    code_verifier = re.sub('[^a-zA-Z0-9]+', '', code_verifier)
-
-    code_challenge = hashlib.sha256(code_verifier.encode('utf-8')).digest()
-    code_challenge = base64.urlsafe_b64encode(code_challenge).decode('utf-8')
-    code_challenge = code_challenge.replace("=", '')
-
-    payload = {
-        "response_type": "code",
-        "client_id": CLIENT_ID,
-        "scope": scope,
-        "redirect_uri": redirect_url,
-        "code_challenge_method": "S256",
-        "code_challenge": code_challenge,
-    }
-
-    response = requests.get("https://accounts.spotify.com/authorize/?", params=payload)
+import info
+import access_token
+import authorize
 
 
 def request_time_range():
@@ -91,10 +37,11 @@ def get_top_plays(limit, time_range):
     return json object
     """
     # get tracks that the user plays the most
+    print("Access token: " + access_token.ACCESS_TOKEN)
     response = requests.get(
-        SPOTIFY_GET_TOP_TRACKS_URL,
+        info.SPOTIFY_GET_TOP_TRACKS_URL,
         headers={
-            "Authorization": f"Bearer {ACCESS_TOKEN}"
+            "Authorization": f"Bearer {access_token.ACCESS_TOKEN}"
         },
         params={
             "limit": limit,
@@ -116,8 +63,8 @@ def create_playlist(public):
     # create a new playlist
     name = input("What is the playlist called? ")
     response = requests.post(
-        SPOTIFY_CREATE_PLAYLIST_URL,
-        headers={"Authorization": f"Bearer {ACCESS_TOKEN}"},
+        info.SPOTIFY_CREATE_PLAYLIST_URL,
+        headers={"Authorization": f"Bearer {access_token.ACCESS_TOKEN}"},
         json={
             "name": name,
             "public": public
@@ -147,9 +94,9 @@ def add_song_to_playlist(playlist_id, song_uri):
     """
     # adds an individual song to playlist
     response = requests.post(
-        SPOTIFY_ADD_TO_PLAYLIST_URL,
+        info.SPOTIFY_ADD_TO_PLAYLIST_URL,
         headers={
-            "Authorization": f"Bearer {ACCESS_TOKEN}"
+            "Authorization": f"Bearer {access_token.ACCESS_TOKEN}"
         },
         params={
             "uris": song_uri
@@ -161,8 +108,8 @@ def add_song_to_playlist(playlist_id, song_uri):
 
 
 def main():
-    get_access_token()
-    authorize_user()
+    ACCESS_TOKEN = access_token.get_access_token()
+    authorize.authorize_user()
     limit = int(input("How many items to return? "))
     # 0 <= limit <= 50
     if limit < 0 or limit > 50:
