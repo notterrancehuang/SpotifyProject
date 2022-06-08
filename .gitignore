@@ -5,3 +5,4 @@ RedirectURL
 top_songs_output.json
 playlist_info.json
 .vscode
+__pycache__
