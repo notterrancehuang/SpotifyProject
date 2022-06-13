@@ -29,7 +29,15 @@ def request_time_range():
         return "INVALID"
 
 
-def get_top_plays(limit, time_range):
+def request_limit():
+    limit = int(input("How many items to return? "))
+    # 0 <= limit <= 50
+    if limit < 0 or limit > 50:
+        limit = 20
+    return limit
+
+
+def get_top_plays(access_token, limit, time_range):
     """
     limit: number of songs to return
     time_range: the time range of top songs
@@ -37,11 +45,11 @@ def get_top_plays(limit, time_range):
     return json object
     """
     # get tracks that the user plays the most
-    print("Access token: " + ACCESS_TOKEN)
+    print("Access token: " + access_token)
     response = requests.get(
         info.SPOTIFY_GET_TOP_TRACKS_URL,
         headers={
-            "Authorization": f"Bearer {ACCESS_TOKEN}"
+            "Authorization": f"Bearer {access_token}"
         },
         params={
             "limit": limit,
@@ -54,7 +62,7 @@ def get_top_plays(limit, time_range):
     return json_response
 
 
-def create_playlist(public):
+def create_playlist(access_token, public):
     """
     public: a boolean for if the new playlist is public
 
@@ -64,7 +72,7 @@ def create_playlist(public):
     name = input("What is the playlist called? ")
     response = requests.post(
         info.get_spotify_create_playlist_url(info.user_id),
-        headers={"Authorization": f"Bearer {ACCESS_TOKEN}"},
+        headers={"Authorization": f"Bearer {access_token}"},
         json={
             "name": name,
             "public": public
@@ -75,17 +83,17 @@ def create_playlist(public):
     return json_response
 
 
-def add_songs(playlist_id, songs):
+def add_songs(access_token, playlist_id, songs):
     """
     playlist_id: the id of the playlist 
     songs: list of song uris
     """
     # takes in a list of song ids and adds them to playlist
     for song in songs:
-        add_song_to_playlist(playlist_id, song)
+        add_song_to_playlist(access_token, playlist_id, song)
 
 
-def add_song_to_playlist(playlist_id, song_uri):
+def add_song_to_playlist(access_token, playlist_id, song_uri):
     """
     playlist_id: the id of the playlist
     song_uri: the song id
@@ -97,7 +105,7 @@ def add_song_to_playlist(playlist_id, song_uri):
     response = requests.post(
         add_to_playlist_url,
         headers={
-            "Authorization": f"Bearer {ACCESS_TOKEN}"
+            "Authorization": f"Bearer {access_token}"
         },
         params={
             "uris": song_uri
@@ -109,20 +117,15 @@ def add_song_to_playlist(playlist_id, song_uri):
 
 
 def main():
-    # ACCESS_TOKEN = access_token.get_access_token()
     at = access_token.AccessToken()
-    global ACCESS_TOKEN
     ACCESS_TOKEN = at.get_access_token()
-    ACCESS_TOKEN = "BQBWaTAHlqLOpvr4qcp3jAA8AujK2V_r685hmPAOt1-e6CwmU5Kil9bLZXRuHxoxv_IqGHQHOyDgtZS8Xcl6c36lE6zDsXvFu6PqjRn2MLhqDxFmNvS9Sq9WMboqCdLBcASBprjQNGzJEQwNtTam3SvGX8tgCAI7IvvSaW6XsvaglSilC6AJfkMF2IW58fkv2hcSsVTRa0sYKGC_oi-2gYDIuRUsTkU7JxuwBA"
+    # ACCESS_TOKEN = "BQBWaTAHlqLOpvr4qcp3jAA8AujK2V_r685hmPAOt1-e6CwmU5Kil9bLZXRuHxoxv_IqGHQHOyDgtZS8Xcl6c36lE6zDsXvFu6PqjRn2MLhqDxFmNvS9Sq9WMboqCdLBcASBprjQNGzJEQwNtTam3SvGX8tgCAI7IvvSaW6XsvaglSilC6AJfkMF2IW58fkv2hcSsVTRa0sYKGC_oi-2gYDIuRUsTkU7JxuwBA"
     print(ACCESS_TOKEN)
     authorize.authorize_user()
-    limit = int(input("How many items to return? "))
-    # 0 <= limit <= 50
-    if limit < 0 or limit > 50:
-        limit = 20
+    limit = request_limit()
     time_range = request_time_range()
 
-    top_plays = get_top_plays(limit, time_range)
+    top_plays = get_top_plays(ACCESS_TOKEN, limit, time_range)
 
     # create json file with top songs info
     output_file = open("top_songs_output.json", "w")
@@ -133,6 +136,7 @@ def main():
         songs_uri.append(top_plays["items"][i]["uri"])
 
     playlist = create_playlist(
+        ACCESS_TOKEN, 
         public=True
     )
     # create json file with playlist info
@@ -143,7 +147,7 @@ def main():
     playlist_id = playlist["uri"]
     print(playlist_id)
 
-    add_songs(playlist_id, songs_uri)
+    add_songs(ACCESS_TOKEN, playlist_id, songs_uri)
 
 
 if __name__ == "__main__":
