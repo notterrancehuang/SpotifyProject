@@ -6,10 +6,13 @@ from dataclasses import dataclass
 
 @dataclass
 class AccessToken:
-    ACCESS_TOKEN = ""
-
-    def get_access_token(self):
-        ccs = info.CLIENT_ID + ':' + info.CLIENT_SECRET
+    def get_access_token(self, client_id, client_secret, url):
+        """
+        client_id: the client id
+        client_secret: the client secret
+        url: the url to get token
+        """
+        ccs = client_id + ':' + client_secret
 
         auth_header = base64.b64encode(ccs.encode("ascii"))
 
@@ -23,7 +26,7 @@ class AccessToken:
         }
 
         access_token_request = requests.post(
-            url=info.TOKEN_URL, data=payload, headers=headers)
+            url=url, data=payload, headers=headers)
         access_token_response_data = access_token_request.json()
         access_token = access_token_response_data["access_token"]
         

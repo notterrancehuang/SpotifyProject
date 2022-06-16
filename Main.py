@@ -57,9 +57,12 @@ def get_top_plays(access_token, limit, time_range):
             "time_range": time_range
         }
     )
-    json_response = response.json()
+    if response.status_code != 200:
+        try:
+            return response.json()
+        except:
+            print("Error code: " + response.status_code)
 
-    return json_response
 
 
 def create_playlist(access_token, public):
@@ -78,9 +81,11 @@ def create_playlist(access_token, public):
             "public": public
         }
     )
-    json_response = response.json()
-
-    return json_response
+    if response.status_code != 201:
+        try:
+            return response.json()
+        except:
+            print("Error code: " + response.status_code)
 
 
 def add_songs(access_token, playlist_id, songs):
@@ -111,14 +116,16 @@ def add_song_to_playlist(access_token, playlist_id, song_uri):
             "uris": song_uri
         }
     )
-    json_response = response.json()
-
-    return json_response
+    if response.status_code != 201:
+        try:
+            return response.json()
+        except:
+            print("Error code: " + response.status_code)
 
 
 def main():
     at = access_token.AccessToken()
-    ACCESS_TOKEN = at.get_access_token()
+    ACCESS_TOKEN = at.get_access_token(info.CLIENT_ID, info.CLIENT_SECRET, info.TOKEN_URL)
     # ACCESS_TOKEN = "BQBWaTAHlqLOpvr4qcp3jAA8AujK2V_r685hmPAOt1-e6CwmU5Kil9bLZXRuHxoxv_IqGHQHOyDgtZS8Xcl6c36lE6zDsXvFu6PqjRn2MLhqDxFmNvS9Sq9WMboqCdLBcASBprjQNGzJEQwNtTam3SvGX8tgCAI7IvvSaW6XsvaglSilC6AJfkMF2IW58fkv2hcSsVTRa0sYKGC_oi-2gYDIuRUsTkU7JxuwBA"
     print(ACCESS_TOKEN)
     authorize.authorize_user()
