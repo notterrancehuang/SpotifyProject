@@ -61,7 +61,7 @@ def get_top_plays(access_token, limit, time_range):
         try:
             return response.json()
         except:
-            print("Error code: " + response.status_code)
+            print("Error trying to get top plays: " + str(response.status_code))
 
 
 
@@ -85,7 +85,7 @@ def create_playlist(access_token, public):
         try:
             return response.json()
         except:
-            print("Error code: " + response.status_code)
+            print("Error trying to create playlist: " + str(response.status_code))
 
 
 def add_songs(access_token, playlist_id, songs):
@@ -120,19 +120,18 @@ def add_song_to_playlist(access_token, playlist_id, song_uri):
         try:
             return response.json()
         except:
-            print("Error code: " + response.status_code)
+            print("Error trying to add song to playlist: " + str(response.status_code))
 
 
 def main():
     at = access_token.AccessToken()
-    ACCESS_TOKEN = at.get_access_token(info.CLIENT_ID, info.CLIENT_SECRET, info.TOKEN_URL)
-    # ACCESS_TOKEN = "BQBWaTAHlqLOpvr4qcp3jAA8AujK2V_r685hmPAOt1-e6CwmU5Kil9bLZXRuHxoxv_IqGHQHOyDgtZS8Xcl6c36lE6zDsXvFu6PqjRn2MLhqDxFmNvS9Sq9WMboqCdLBcASBprjQNGzJEQwNtTam3SvGX8tgCAI7IvvSaW6XsvaglSilC6AJfkMF2IW58fkv2hcSsVTRa0sYKGC_oi-2gYDIuRUsTkU7JxuwBA"
-    print(ACCESS_TOKEN)
+    token = at.get_access_token(info.CLIENT_ID, info.CLIENT_SECRET, info.TOKEN_URL)
+    print(token)
     authorize.authorize_user()
     limit = request_limit()
     time_range = request_time_range()
 
-    top_plays = get_top_plays(ACCESS_TOKEN, limit, time_range)
+    top_plays = get_top_plays(token, limit, time_range)
 
     # create json file with top songs info
     output_file = open("top_songs_output.json", "w")
@@ -143,7 +142,7 @@ def main():
         songs_uri.append(top_plays["items"][i]["uri"])
 
     playlist = create_playlist(
-        ACCESS_TOKEN, 
+        token, 
         public=True
     )
     # create json file with playlist info
@@ -154,7 +153,7 @@ def main():
     playlist_id = playlist["uri"]
     print(playlist_id)
 
-    add_songs(ACCESS_TOKEN, playlist_id, songs_uri)
+    add_songs(token, playlist_id, songs_uri)
 
 
 if __name__ == "__main__":
