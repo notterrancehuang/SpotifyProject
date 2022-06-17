@@ -46,22 +46,31 @@ def get_top_plays(access_token, limit, time_range):
     """
     # get tracks that the user plays the most
     print("Access token: " + access_token)
-    response = requests.get(
-        info.SPOTIFY_GET_TOP_TRACKS_URL,
-        headers={
-            "Authorization": f"Bearer {access_token}"
-        },
-        params={
-            "limit": limit,
-            "offset": 0,
-            "time_range": time_range
-        }
-    )
-    if response.status_code != 200:
+    headers = {"Authorization": "Bearer " + access_token}
+    r = requests.get("https://api.spotify.com/v1/me/top/tracks?limit="+str(limit), headers=headers)
+    print(r)
+    if r.status_code != 200:
         try:
-            return response.json()
+            return r.json()
         except:
-            print("Error trying to get top plays: " + str(response.status_code))
+            print("Error trying to get top plays: " + str(r.status_code))
+    # response = requests.get(
+    #     info.SPOTIFY_GET_TOP_TRACKS_URL,
+    #     headers={
+    #         "Authorization": f"Bearer {access_token}"
+    #     },
+    #     params={
+    #         "limit": limit,
+    #         "offset": 0,
+    #         "time_range": time_range
+    #     }
+    # )
+    # if response.status_code != 200:
+    #     try:
+    #         return response.json()
+    #     except:
+    #         print("Error trying to get top plays: " + str(response.status_code))
+
 
 
 
@@ -132,14 +141,13 @@ def main():
     time_range = request_time_range()
 
     top_plays = get_top_plays(token, limit, time_range)
-
     # create json file with top songs info
-    output_file = open("top_songs_output.json", "w")
-    output_file.write(json.dumps(top_plays))
-    output_file.close()
-    songs_uri = []
-    for i in range(limit):
-        songs_uri.append(top_plays["items"][i]["uri"])
+    # output_file = open("top_songs_output.json", "w")
+    # output_file.write(json.dumps(top_plays))
+    # output_file.close()
+    # songs_uri = []
+    # for i in range(limit):
+    #     songs_uri.append(top_plays["items"][i]["uri"])
 
     playlist = create_playlist(
         token, 
