@@ -1,6 +1,7 @@
 import hashlib
 import os
 import re
+import time
 import requests
 import json
 import base64
@@ -46,32 +47,40 @@ def get_top_plays(access_token, limit, time_range):
     """
     # get tracks that the user plays the most
     print("Access token: " + access_token)
-    headers = {"Authorization": "Bearer " + access_token}
-    r = requests.get("https://api.spotify.com/v1/me/top/tracks?limit="+str(limit), headers=headers)
-    print(r)
-    if r.status_code != 200:
+    # headers = {"Authorization": "Bearer " + access_token}
+    # r = requests.get(
+    #     "https://api.spotify.com/v1/me/top/tracks?limit="+str(limit), headers=headers)
+    # print("Response from getting top plays: ", end="")
+    # print(r)
+
+    # if r.status_code != 200:
+        # try:
+        #     return r.json()
+        # except:
+        #     print("Error trying to get top plays: " + str(r.status_code))
+
+    response = requests.get(
+        info.SPOTIFY_GET_TOP_TRACKS_URL,
+        headers={
+            "Authorization": f"Bearer {access_token}"
+        },
+        params={
+            "limit": limit,
+            "offset": 0,
+            "time_range": time_range
+        }
+    )
+
+    print("Response from getting top plays: ", end="")
+    print(response)
+
+    if response.status_code != 200:
         try:
-            return r.json()
+            return response.json()
         except:
-            print("Error trying to get top plays: " + str(r.status_code))
-    # response = requests.get(
-    #     info.SPOTIFY_GET_TOP_TRACKS_URL,
-    #     headers={
-    #         "Authorization": f"Bearer {access_token}"
-    #     },
-    #     params={
-    #         "limit": limit,
-    #         "offset": 0,
-    #         "time_range": time_range
-    #     }
-    # )
-    # if response.status_code != 200:
-    #     try:
-    #         return response.json()
-    #     except:
-    #         print("Error trying to get top plays: " + str(response.status_code))
-
-
+            print("Error trying to get top plays: " + str(response.status_code))
+    else:
+        return response.json()
 
 
 def create_playlist(access_token, public):
@@ -94,7 +103,10 @@ def create_playlist(access_token, public):
         try:
             return response.json()
         except:
-            print("Error trying to create playlist: " + str(response.status_code))
+            print("Error trying to create playlist: " +
+                  str(response.status_code))
+    else:
+        return response.json()
 
 
 def add_songs(access_token, playlist_id, songs):
@@ -103,8 +115,14 @@ def add_songs(access_token, playlist_id, songs):
     songs: list of song uris
     """
     # takes in a list of song ids and adds them to playlist
+    num = 1
     for song in songs:
+        print("Song #" + str(num) + ": ", end="")
+        print(song)
+        num += 1
+
         add_song_to_playlist(access_token, playlist_id, song)
+        time.sleep(1.2)
 
 
 def add_song_to_playlist(access_token, playlist_id, song_uri):
@@ -129,28 +147,33 @@ def add_song_to_playlist(access_token, playlist_id, song_uri):
         try:
             return response.json()
         except:
-            print("Error trying to add song to playlist: " + str(response.status_code))
+            print("Error trying to add song to playlist: " +
+                  str(response.status_code))
+    else:
+        return response.json()
 
 
 def main():
     at = access_token.AccessToken()
-    token = at.get_access_token(info.CLIENT_ID, info.CLIENT_SECRET, info.TOKEN_URL)
+    token = at.get_access_token(
+        info.CLIENT_ID, info.CLIENT_SECRET, info.TOKEN_URL)
     print(token)
     authorize.authorize_user()
     limit = request_limit()
     time_range = request_time_range()
 
     top_plays = get_top_plays(token, limit, time_range)
+
     # create json file with top songs info
     # output_file = open("top_songs_output.json", "w")
     # output_file.write(json.dumps(top_plays))
     # output_file.close()
-    # songs_uri = []
-    # for i in range(limit):
-    #     songs_uri.append(top_plays["items"][i]["uri"])
+    songs_uri = []
+    for i in range(limit):
+        songs_uri.append(top_plays["items"][i]["uri"])
 
     playlist = create_playlist(
-        token, 
+        token,
         public=True
     )
     # create json file with playlist info
@@ -160,6 +183,9 @@ def main():
 
     playlist_id = playlist["uri"]
     print(playlist_id)
+
+    print("Songs URI: ", end="")
+    print(songs_uri)
 
     add_songs(token, playlist_id, songs_uri)
 
