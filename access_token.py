@@ -1,34 +1,53 @@
 import info
 import requests
 import base64
+from http_end_point import HttpEndPoint
 from dataclasses import dataclass
 
 
 @dataclass
 class AccessToken:
-    def get_access_token(self, client_id, client_secret, url):
+    def __init__(self, client_id, client_secret):
+        self.client_id = client_id
+        self.client_secret = client_secret
+        self.base64_string = base64.urlsafe_b64encode(
+            (self.client_id + ":" + self.client_secret).encode()).decode()
+        self.token_api_url = "https://accounts.spotify.com/api/token"
+
+    def get_access_token(self):
         """
         client_id: the client id
         client_secret: the client secret
         url: the url to get token
         """
-        ccs = client_id + ':' + client_secret
 
-        auth_header = base64.b64encode(ccs.encode("ascii"))
+        end_point = HttpEndPoint(
+            api_url=self.token_api_url, auth_base64=self.base64_string)
+        response = end_point.create_end_point()
+        if response.status_code == 200:
+            return response.json()['access_token']
+        else:
+            raise Exception("Cannot get access token! - " +
+                            response.json()['error'])
 
-        headers = {
-            'Authorization': "Basic " + auth_header.decode(),
-            "Content-Type": "application/x-www-form-urlencoded"
-        }
+        # ccs = client_id + ':' + client_secret
 
-        payload = {
-            'grant_type': 'client_credentials',
-        }
+        # auth_header = base64.b64encode(ccs.encode("ascii"))
 
-        access_token_request = requests.post(
-            url=url, data=payload, headers=headers)
-        access_token_response_data = access_token_request.json()
-        access_token = access_token_response_data["access_token"]
-        
-        # return access_token
-        return "BQAi78ThyRIqh5keSIdySFhyC11leiEFoxVdh1dTwwrcxJpqyjmKLlm-UkRdRjxN_UvnGPc7-sgtEvBPf63U0rP5m-9BgDhTPhgjOM8pW4k0JvzIcgtDD4doIXo6fXJ-WngYNotAkLUUCPhpdu0PAa9N3-y1mbbFlJVHAmk6L-dC20j-ZX0YlcZysPoiy88gET3J2zK9F8Zrb66vKm_BJE7d6RjOCT2bvmkuS6QUE7TjR0pqWw69eKMV0qX4UPiIlfMTaQ"
+        # headers = {
+        #     'Authorization': "Basic " + auth_header.decode(),
+        #     "Content-Type": "application/x-www-form-urlencoded"
+        # }
+
+        # payload = {
+        #     'grant_type': 'client_credentials',
+        # }
+
+        # access_token_request = requests.post(
+        #     url=url, data=payload, headers=headers)
+        # access_token_response_data = access_token_request.json()
+        # access_token = access_token_response_data["access_token"]
+
+        # # return access_token
+        # return \
+        #     "BQA1RVokjJ1knKwtbeAi8BM2_tkDs4tLPqAxJbnOyS87OOdK0n_XNa8pDgnF7O5MagrQFicgeuQSmr25dHMCeOPBCOgMnyxSZ6yAPIsSygHQ0OVDRM60JNrPuF6EzJUZ9GKRMuESCwcWJEMn1k2cIw55PxBc4y6pbwUN3c82fqKFfjwZj_89NfQfykArgdknis13U2coON6uBJjHFnNu-pzr2L3LjB-lihUuvCY0w7n63SDMgy00vcv2FbBYRlY-6smefg"
