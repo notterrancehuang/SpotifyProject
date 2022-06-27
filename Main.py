@@ -47,18 +47,6 @@ def get_top_plays(access_token, limit, time_range):
     """
     # get tracks that the user plays the most
     print("Access token: " + access_token)
-    # headers = {"Authorization": "Bearer " + access_token}
-    # r = requests.get(
-    #     "https://api.spotify.com/v1/me/top/tracks?limit="+str(limit), headers=headers)
-    # print("Response from getting top plays: ", end="")
-    # print(r)
-
-    # if r.status_code != 200:
-        # try:
-        #     return r.json()
-        # except:
-        #     print("Error trying to get top plays: " + str(r.status_code))
-
     response = requests.get(
         info.SPOTIFY_GET_TOP_TRACKS_URL,
         headers={
@@ -74,13 +62,11 @@ def get_top_plays(access_token, limit, time_range):
     print("Response from getting top plays: ", end="")
     print(response)
 
-    if response.status_code != 200:
-        try:
-            return response.json()
-        except:
-            print("Error trying to get top plays: " + str(response.status_code))
+    if response.status_code == 200:
+        return response.json()["access_token"]
     else:
-        return response.json()
+        raise Exception("Cannot get access token! - " +
+        response.json()["error"])
 
 
 def create_playlist(access_token, public):
@@ -99,14 +85,11 @@ def create_playlist(access_token, public):
             "public": public
         }
     )
-    if response.status_code != 201:
-        try:
-            return response.json()
-        except:
-            print("Error trying to create playlist: " +
-                  str(response.status_code))
+    if response.status_code == 201:
+        return response.json()["access_token"]
     else:
-        return response.json()
+        raise Exception("Cannot get access token! - " +
+        response.json()["error"])
 
 
 def add_songs(access_token, playlist_id, songs):
@@ -143,20 +126,16 @@ def add_song_to_playlist(access_token, playlist_id, song_uri):
             "uris": song_uri
         }
     )
-    if response.status_code != 201:
-        try:
-            return response.json()
-        except:
-            print("Error trying to add song to playlist: " +
-                  str(response.status_code))
+    if response.status_code == 200:
+        return response.json()["access_token"]
     else:
-        return response.json()
+        raise Exception("Cannot get access token! - " +
+        response.json()["error"])
 
 
 def main():
-    at = access_token.AccessToken()
-    token = at.get_access_token(
-        info.CLIENT_ID, info.CLIENT_SECRET, info.TOKEN_URL)
+    at = access_token.AccessToken(info.CLIENT_ID, info.CLIENT_SECRET)
+    token = at.get_access_token()
     print(token)
     authorize.authorize_user()
     limit = request_limit()
