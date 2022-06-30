@@ -66,7 +66,7 @@ def get_top_plays(access_token, limit, time_range):
         return response.json()["access_token"]
     else:
         raise Exception("Cannot get access token! - " +
-        response.json()["error"])
+                        response.json()["error"])
 
 
 def create_playlist(access_token, public):
@@ -89,7 +89,7 @@ def create_playlist(access_token, public):
         return response.json()["access_token"]
     else:
         raise Exception("Cannot get access token! - " +
-        response.json()["error"])
+                        response.json()["error"])
 
 
 def add_songs(access_token, playlist_id, songs):
@@ -130,27 +130,29 @@ def add_song_to_playlist(access_token, playlist_id, song_uri):
         return response.json()["access_token"]
     else:
         raise Exception("Cannot get access token! - " +
-        response.json()["error"])
+                        response.json()["error"])
 
 
-def main():
+def start():
+    global token
+    global limit
+    global time_range
     at = access_token.AccessToken(info.CLIENT_ID, info.CLIENT_SECRET)
     token = at.get_access_token()
     print(token)
     authorize.authorize_user()
     limit = request_limit()
     time_range = request_time_range()
-
     top_plays = get_top_plays(token, limit, time_range)
 
-    # create json file with top songs info
-    # output_file = open("top_songs_output.json", "w")
-    # output_file.write(json.dumps(top_plays))
-    # output_file.close()
     songs_uri = []
     for i in range(limit):
         songs_uri.append(top_plays["items"][i]["uri"])
 
+    return top_plays, songs_uri
+
+
+def top_plays_playlist(token, songs_uri):
     playlist = create_playlist(
         token,
         public=True
@@ -167,6 +169,17 @@ def main():
     print(songs_uri)
 
     add_songs(token, playlist_id, songs_uri)
+
+
+def main():
+    top_plays, songs_uri = start()
+
+    # create json file with top songs info
+    # output_file = open("top_songs_output.json", "w")
+    # output_file.write(json.dumps(top_plays))
+    # output_file.close()
+
+    top_plays_playlist(token, songs_uri)
 
 
 if __name__ == "__main__":
